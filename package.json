@@ -1,0 +1,32 @@
+{
+  "name": "sistema-calendario-institucional",
+  "version": "1.0.0",
+  "description": "Plataforma web institucional con calendarios, cronogramas y matriz de horarios de clases interactivos",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "seed": "node seed.js"
+  },
+  "keywords": [
+    "node",
+    "express",
+    "mongodb",
+    "calendar",
+    "schedule",
+    "institutional"
+  ],
+  "author": "Antigravity",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.5.1",
+    "nodemailer": "^10.1.7"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^9.5.0",
+    "nodemon": "^3.1.4"
+  }
+}

@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Institucional - Gestión de Calendarios y Horarios</title>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description"
+    content="Plataforma institucional para administración de calendarios de clases, actividades deportivas, cronogramas de exámenes y gestión de horarios interactivos.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/styles.css?v=2">
+</head>
+
+<body>
+
+  <div class="app-layout">
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+        <div class="brand-info">
+          <span class="brand-title">Instituto Educativo Superior</span>
+          <span class="brand-sub">Sistema de Horarios y Calendarios</span>
+        </div>
+      </div>
+
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="globalSearchInput" placeholder="Buscar materias, docentes, eventos o materias...">
+      </div>
+
+      <!-- User Profile Badge & Authentication Section -->
+      <div class="top-bar-auth-section">
+        <div id="dbStatusBadge" class="db-status-badge memorystore" title="Estado de la base de datos">
+          <i class="fa-solid fa-database"></i> <span id="dbStatusText">Verificando BD...</span>
+        </div>
+
+        <div class="user-profile-badge" id="userProfileBadge" title="Estado de autenticación del usuario">
+          <span class="user-avatar" id="activeUserAvatar">👤</span>
+          <span class="user-name" id="activeUserName">Invitado (Consulta)</span>
+          <div id="activeRoleBadge" class="role-badge guest">Solo Lectura</div>
+        </div>
+
+        <button id="btnOpenAuthModal" class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.8rem;"
+          title="Iniciar Sesión Institucional">
+          <i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión
+        </button>
+
+        <button id="btnLogoutBtn" class="btn btn-outline"
+          style="display:none; padding:0.4rem 0.8rem; font-size:0.8rem; color:#ef4444; border-color:#ef4444;"
+          title="Cerrar Sesión">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Salir
+        </button>
+      </div>
+    </header>
+
+    <div class="main-body">
+
+      <!-- SIDEBAR - CARPETAS Y CALENDARIOS -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <h2><i class="fa-solid fa-folder-tree"></i> Organizador</h2>
+          <div class="sidebar-actions">
+            <button id="btnNewFolder" class="icon-btn" title="Nueva Carpeta"><i
+                class="fa-solid fa-folder-plus"></i></button>
+            <button id="btnNewCalendar" class="icon-btn primary" title="Nuevo Calendario"><i
+                class="fa-solid fa-calendar-plus"></i></button>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <div class="nav-section">
+            <div class="nav-section-title">Vistas Rápidas</div>
+            <a href="#" class="nav-item active" id="navAllCalendars">
+              <i class="fa-solid fa-globe"></i> Todos los Calendarios
+            </a>
+          </div>
+
+          <div class="nav-section">
+            <div class="nav-section-header">
+              <span class="nav-section-title">Carpetas e Itinerarios</span>
+            </div>
+
+            <div id="folderList" class="folder-list">
+              <!-- Dynamically populated via JS -->
+              <div class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> Cargando carpetas...</div>
+            </div>
+          </div>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="permission-status" id="permissionStatusBox">
+            <i class="fa-solid fa-circle-check"></i> Modo Edición Habilitado
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN WORKSPACE CONTENT -->
+      <main class="content-area">
+
+        <!-- CALENDAR TITLE HEADER & ACTIONS -->
+        <div class="calendar-header-card" id="calendarHeaderCard">
+          <div class="calendar-title-group">
+            <span class="calendar-icon-badge" id="calHeaderIcon">📖</span>
+            <div>
+              <div class="title-row">
+                <h1 id="calHeaderTitle">Horario General de Clases</h1>
+                <span class="calendar-type-chip" id="calHeaderType">Horarios</span>
+                <span class="calendar-visibility-badge" id="calHeaderVisibility"><i
+                    class="fa-solid fa-earth-americas"></i> Público</span>
+                <span class="calendar-folder-badge" id="calHeaderFolder" style="display:none; font-size:0.75rem; background:#1e293b; color:#93c5fd; padding:0.25rem 0.6rem; border-radius:12px; align-items:center; gap:0.35rem; border:1px solid #334155;">
+                  <i class="fa-solid fa-folder"></i> <span id="calHeaderFolderText">Carpeta</span>
+                </span>
+              </div>
+              <p class="calendar-desc" id="calHeaderDesc">Matriz de horarios de clases por grupos y asignaturas.</p>
+            </div>
+          </div>
+
+          <div class="calendar-header-actions">
+            <div class="view-switcher">
+              <button class="switch-btn active" id="btnViewSchedule"><i class="fa-solid fa-table-cells"></i> Horarios de Clases</button>
+              <button class="switch-btn" id="btnViewEvents"><i class="fa-solid fa-calendar-days"></i> Cronograma de Eventos</button>
+              <button class="switch-btn" id="btnViewCatalogs"><i class="fa-solid fa-graduation-cap"></i> Gestión Académica (Grupos, Aulas, Materias, Maestros)</button>
+            </div>
+
+            <div class="action-buttons-group">
+              <button class="btn btn-outline" id="btnShareCalendar"><i class="fa-solid fa-user-plus"></i> Compartir y Permisos</button>
+              <button class="btn btn-outline" id="btnEditCalendar"><i class="fa-solid fa-pen"></i> Editar</button>
+              <button class="btn btn-danger-outline" id="btnDeleteCalendar" title="Eliminar Calendario"><i class="fa-solid fa-trash-can"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 1: HORARIO DE CLASES INTERACTIVO (MATRIZ GRUPOS vs HORAS) -->
+        <section id="scheduleView" class="view-panel active">
+
+          <div class="schedule-controls-bar">
+            <div class="day-filter">
+              <span class="filter-label"><i class="fa-solid fa-calendar-week"></i> Día Seleccionado:</span>
+              <button class="day-chip active" data-day="Lunes">Lunes</button>
+              <button class="day-chip" data-day="Martes">Martes</button>
+              <button class="day-chip" data-day="Miércoles">Miércoles</button>
+              <button class="day-chip" data-day="Jueves">Jueves</button>
+              <button class="day-chip" data-day="Viernes">Viernes</button>
+            </div>
+
+            <div class="schedule-actions">
+              <button class="btn btn-secondary" id="btnAddGroupBtn"><i class="fa-solid fa-layer-group"></i> + Añadir
+                Grupo</button>
+              <button class="btn btn-secondary" id="btnAddSlotBtn"><i class="fa-solid fa-clock"></i> + Añadir Bloque
+                Horario</button>
+              <button class="btn btn-primary" id="btnSaveScheduleBatch"><i class="fa-solid fa-floppy-disk"></i> Guardar
+                Horario</button>
+            </div>
+          </div>
+
+
+          <div class="table-container">
+            <table class="schedule-matrix-table" id="scheduleTable">
+              <thead>
+                <tr id="scheduleTableHeader">
+                  <th class="group-col-header">Grupo / Curso</th>
+                  <th>07:00 - 08:30</th>
+                  <th>08:30 - 10:00</th>
+                  <th>10:30 - 12:00</th>
+                  <th>12:00 - 13:30</th>
+                </tr>
+              </thead>
+              <tbody id="scheduleTableBody">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+
+        </section>
+
+        <!-- VIEW 2: CRONOGRAMA Y EVENTOS -->
+        <section id="eventsView" class="view-panel">
+          <div class="events-controls-bar">
+            <div class="events-filter-group">
+              <span class="filter-label"><i class="fa-solid fa-filter"></i> Filtrar Categoría:</span>
+              <button class="category-chip active" data-cat="all">Todos</button>
+              <button class="category-chip" data-cat="Deportes">🏆 Deportes</button>
+              <button class="category-chip" data-cat="Exámenes">📝 Exámenes / Pruebas</button>
+              <button class="category-chip" data-cat="Institucional">🏛️ Institucional</button>
+            </div>
+
+            <button class="btn btn-primary" id="btnAddEventBtn"><i class="fa-solid fa-plus"></i> Añadir Evento</button>
+          </div>
+
+          <div class="events-grid" id="eventsGrid">
+            <!-- Dynamically populated cards -->
+          </div>
+        </section>
+
+        <!-- VIEW 3: GESTIÓN ACADÉMICA E INSTITUCIONAL (GRUPOS, AULAS, MATERIAS, MAESTROS) -->
+        <section id="catalogsView" class="view-panel">
+          <div class="catalogs-header-card">
+            <div class="catalogs-header-info">
+              <h2><i class="fa-solid fa-graduation-cap"></i> Gestión Académica e Institucional</h2>
+              <p>Administra los grupos, aulas y materias sincronizados en tiempo real con MongoDB Atlas.</p>
+            </div>
+            <div class="catalogs-subtabs">
+              <button type="button" class="catalog-tab-btn active" data-tab="gruposTab"><i class="fa-solid fa-layer-group"></i> Grupos (<span id="countGrupos">0</span>)</button>
+              <button type="button" class="catalog-tab-btn" data-tab="aulasTab"><i class="fa-solid fa-door-open"></i> Aulas (<span id="countAulas">0</span>)</button>
+              <button type="button" class="catalog-tab-btn" data-tab="materiasTab"><i class="fa-solid fa-book"></i> Materias (<span id="countMaterias">0</span>)</button>
+            </div>
+          </div>
+
+          <!-- TAB: GRUPOS -->
+          <div id="gruposTab" class="catalog-tab-panel active">
+            <div class="catalog-card-action">
+              <form id="formAddGrupoCatalog" class="catalog-form-inline">
+                <input type="text" id="inputNewGrupoName" class="form-control" placeholder="Nombre de nuevo grupo (Ej. Grupo 10-A, 11-B)..." required>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Guardar Grupo en BD</button>
+                <button type="button" id="btnSyncGruposToCal" class="btn btn-outline" title="Añadir grupos registrados al horario activo"><i class="fa-solid fa-table-cells"></i> Añadir a Horario Actual</button>
+              </form>
+            </div>
+            <div class="catalog-list-grid" id="gruposGrid"></div>
+          </div>
+
+          <!-- TAB: AULAS -->
+          <div id="aulasTab" class="catalog-tab-panel">
+            <div class="catalog-card-action">
+              <form id="formAddAulaCatalog" class="catalog-form-inline">
+                <input type="text" id="inputNewAulaName" class="form-control" placeholder="Nombre del aula / salón (Ej. Aula 204, Lab 1)..." required>
+                <input type="text" id="inputNewAulaLocation" class="form-control" placeholder="Ubicación / Edificio (Ej. Edificio A, Piso 2)...">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Guardar Aula en BD</button>
+              </form>
+            </div>
+            <div class="catalog-list-grid" id="aulasGrid"></div>
+          </div>
+
+          <!-- TAB: MATERIAS -->
+          <div id="materiasTab" class="catalog-tab-panel">
+            <div class="catalog-card-action">
+              <form id="formAddMateriaCatalog" class="catalog-form-inline">
+                <input type="text" id="inputNewMateriaName" class="form-control" placeholder="Nombre de la asignatura (Ej. Matemáticas Discretas)..." required>
+                <input type="text" id="inputNewMateriaCode" class="form-control" placeholder="Código (Ej. MAT-101)..." style="max-width:180px;">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Guardar Materia en BD</button>
+              </form>
+            </div>
+            <div class="catalog-list-grid" id="materiasGrid"></div>
+          </div>
+        </section>
+
+      </main>
+
+    </div>
+  </div>
+
+  <!-- MODAL: NUEVO / EDITAR CALENDARIO -->
+  <div class="modal-overlay" id="calendarModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="calendarModalTitle"><i class="fa-solid fa-calendar-plus"></i> Crear Nuevo Calendario</h3>
+        <button class="close-modal-btn" data-close="calendarModal">&times;</button>
+      </div>
+      <form id="calendarForm">
+        <input type="hidden" id="calIdInput">
+        <div class="form-group">
+          <label for="calNameInput">Nombre del Calendario</label>
+          <input type="text" id="calNameInput" class="form-control" placeholder="Ej. Cronograma Deportivo 2026"
+            required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="calTypeSelect">Tipo de Contenido</label>
+            <select id="calTypeSelect" class="form-control">
+              <option value="horario"> Horario de Clases</option>
+              <option value="deportes">⚽ Cronograma Deportivo</option>
+              <option value="pruebas">📝 Pruebas y Exámenes</option>
+              <option value="eventos">🏛️ Eventos Institucionales</option>
+              <option value="general">📅 General</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="calFolderSelect">Carpeta contenedora</label>
+            <select id="calFolderSelect" class="form-control">
+              <option value="">Sin Carpeta (Raíz)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="calColorInput">Color distintivo</label>
+            <div class="color-picker-wrapper">
+              <input type="color" id="calColorInput" value="#3b82f6">
+              <span id="calColorVal">#3b82f6</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="calIconInput">Icono / Emoji</label>
+            <input type="text" id="calIconInput" class="form-control" value="📅" maxlength="4">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="calDescInput">Descripción corta</label>
+          <textarea id="calDescInput" class="form-control" rows="2"
+            placeholder="Información u objetivo de este calendario..."></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="calendarModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Guardar Calendario</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: GESTIÓN DE CARPETAS (CREAR / EDITAR) -->
+  <div class="modal-overlay" id="folderModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="folderModalTitle"><i class="fa-solid fa-folder-plus"></i> Crear Nueva Carpeta</h3>
+        <button class="close-modal-btn" data-close="folderModal">&times;</button>
+      </div>
+      <form id="folderForm">
+        <input type="hidden" id="folderIdInput">
+        <div class="form-group">
+          <label for="folderNameInput">Nombre de la Carpeta</label>
+          <input type="text" id="folderNameInput" class="form-control" placeholder="Ej. Deportes y Clubes" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="folderColorInput">Color de Carpeta</label>
+            <div class="color-picker-wrapper">
+              <input type="color" id="folderColorInput" value="#6366f1">
+              <span id="folderColorVal">#6366f1</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="folderIconInput">Icono / Emoji</label>
+            <input type="text" id="folderIconInput" class="form-control" value="📁" maxlength="4">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="folderModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btnSubmitFolder"><i class="fa-solid fa-folder-check"></i> Guardar Carpeta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: GESTIÓN DE PERMISOS Y COMPARTIR -->
+  <div class="modal-overlay" id="permissionsModal">
+    <div class="modal-card width-medium">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-user-gear"></i> Administrar Permisos y Compartir</h3>
+        <button class="close-modal-btn" data-close="permissionsModal">&times;</button>
+      </div>
+      <form id="permissionsForm">
+        <input type="hidden" id="permCalIdInput">
+
+        <div class="visibility-section">
+          <h4>Nivel de Visibilidad General</h4>
+          <div class="radio-card-group">
+            <label class="radio-card">
+              <input type="radio" name="visibility" value="public" checked>
+              <div class="card-content">
+                <span class="card-title"><i class="fa-solid fa-earth-americas"></i> Público Institucional</span>
+                <span class="card-sub">Cualquier usuario de la institución puede consultar este calendario.</span>
+              </div>
+            </label>
+
+            <label class="radio-card">
+              <input type="radio" name="visibility" value="restricted">
+              <div class="card-content">
+                <span class="card-title"><i class="fa-solid fa-user-lock"></i> Restringido a Lista</span>
+                <span class="card-sub">Sólo los usuarios autorizados explícitamente en la lista pueden verlo.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="permissions-lists">
+          <div class="form-group">
+            <label><i class="fa-solid fa-pen-to-square"></i> Editores Autorizados (Pueden modificar horarios y
+              eventos)</label>
+            <div id="editorsCheckboxList" class="user-checkbox-list">
+              <!-- Dynamically populated checkboxes -->
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label><i class="fa-solid fa-eye"></i> Lectores Autorizados (Solo ver)</label>
+            <div id="viewersCheckboxList" class="user-checkbox-list">
+              <!-- Dynamically populated checkboxes -->
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="permissionsModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar
+            Permisos</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: NUEVO / EDITAR EVENTO -->
+  <div class="modal-overlay" id="eventModal">
+    <div class="modal-card width-medium">
+      <div class="modal-header">
+        <h3 id="eventModalTitle"><i class="fa-solid fa-calendar-plus"></i> Añadir Nuevo Evento</h3>
+        <button class="close-modal-btn" data-close="eventModal">&times;</button>
+      </div>
+      <form id="eventForm">
+        <input type="hidden" id="eventIdInput">
+
+        <div class="form-group">
+          <label for="eventTitleInput"><i class="fa-solid fa-heading"></i> Título del Evento (`titulo`)</label>
+          <input type="text" id="eventTitleInput" class="form-control"
+            placeholder="Ej. Examen Parcial de Álgebra / Entrenamientos" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="eventSubjectInput"><i class="fa-solid fa-book"></i> Materia / Asignatura (`materia_id`)</label>
+            <input type="text" id="eventSubjectInput" class="form-control" placeholder="Ej. Matemáticas Discretas">
+          </div>
+
+          <div class="form-group">
+            <label for="eventTeacherSelect"><i class="fa-solid fa-user-tie"></i> Profesor / Docente
+              (`profesor_id`)</label>
+            <select id="eventTeacherSelect" class="form-control">
+              <!-- Dynamically populated from State.users -->
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="eventGroupInput"><i class="fa-solid fa-users-rectangle"></i> Grupo (`grupo_id`)</label>
+            <input type="text" id="eventGroupInput" class="form-control" placeholder="Ej. Grupo 10-A (Sistemas)">
+          </div>
+
+          <div class="form-group">
+            <label for="eventClassroomInput"><i class="fa-solid fa-door-open"></i> Aula / Salón (`aula_id`)</label>
+            <input type="text" id="eventClassroomInput" class="form-control" placeholder="Ej. Aula 204 / Lab Central">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="eventDateInput"><i class="fa-solid fa-calendar-day"></i> Fecha de Inicio
+              (`fecha_inicio`)</label>
+            <input type="date" id="eventDateInput" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="eventStartInput"><i class="fa-solid fa-clock"></i> Hora de Inicio</label>
+            <input type="time" id="eventStartInput" class="form-control" value="09:00" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="eventEndDateInput"><i class="fa-solid fa-calendar-check"></i> Fecha de Fin (`fecha_fin`)</label>
+            <input type="date" id="eventEndDateInput" class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label for="eventEndInput"><i class="fa-solid fa-clock"></i> Hora de Fin</label>
+            <input type="time" id="eventEndInput" class="form-control" value="10:30" required>
+          </div>
+        </div>
+
+        <!-- RECURRENCIA -->
+        <div class="form-group"
+          style="background: rgba(59, 130, 246, 0.05); padding: 1rem; border-radius: 8px; border: 1px dashed rgba(59, 130, 246, 0.3);">
+          <label style="font-weight:600; margin-bottom:0.5rem; display:flex; align-items:center; gap:0.5rem;">
+            <input type="checkbox" id="eventRecurrentCheck">
+            <span><i class="fa-solid fa-rotate"></i> Evento Recurrente (`recurrencia`)</span>
+          </label>
+
+          <div id="recurrenceFieldsGroup" style="display:none; margin-top:0.75rem;">
+            <div class="form-row" style="margin-bottom:0.5rem;">
+              <div class="form-group">
+                <label for="eventFreqSelect">Frecuencia</label>
+                <select id="eventFreqSelect" class="form-control">
+                  <option value="Semanal">Semanal</option>
+                  <option value="Diaria">Diaria</option>
+                  <option value="Mensual">Mensual</option>
+                </select>
+              </div>
+            </div>
+            <label style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.25rem; display:block;">Días
+              repetidos:</label>
+            <div class="day-checkboxes-grid" style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+              <label class="checkbox-item"><input type="checkbox" class="chk-recurrent-day" value="Lunes"> Lunes</label>
+              <label class="checkbox-item"><input type="checkbox" class="chk-recurrent-day" value="Martes">
+                Martes</label>
+              <label class="checkbox-item"><input type="checkbox" class="chk-recurrent-day" value="Miércoles">
+                Miércoles</label>
+              <label class="checkbox-item"><input type="checkbox" class="chk-recurrent-day" value="Jueves">
+                Jueves</label>
+              <label class="checkbox-item"><input type="checkbox" class="chk-recurrent-day" value="Viernes">
+                Viernes</label>
+              <label class="checkbox-item"><input type="checkbox" class="chk-recurrent-day" value="Sábado">
+                Sábado</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="eventCategorySelect">Categoría Visual</label>
+            <select id="eventCategorySelect" class="form-control">
+              <option value="Exámenes">📝 Exámenes / Pruebas</option>
+              <option value="Deportes">🏆 Deportes</option>
+              <option value="Institucional">🏛️ Institucional</option>
+              <option value="General">📅 General</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="eventColorInput">Color Badge</label>
+            <div class="color-picker-wrapper">
+              <input type="color" id="eventColorInput" value="#3b82f6">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="eventDescInput">Detalles / Notas Adicionales</label>
+          <textarea id="eventDescInput" class="form-control" rows="2"
+            placeholder="Instrucciones o requerimientos..."></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="eventModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Guardar Evento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: NUEVO / EDITAR GRUPO -->
+  <div class="modal-overlay" id="groupModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="groupModalTitle"><i class="fa-solid fa-layer-group"></i> Gestionar Grupo</h3>
+        <button class="close-modal-btn" data-close="groupModal">&times;</button>
+      </div>
+      <form id="groupForm">
+        <input type="hidden" id="oldGroupInput">
+        <div class="form-group">
+          <label for="groupNameInput">Nombre del Grupo / Curso / Sección</label>
+          <input type="text" id="groupNameInput" list="gruposDatalist" class="form-control" placeholder="Ej. Grupo 10-A (Sistemas)" required>
+          <small style="color:var(--text-muted); font-size:0.75rem; margin-top:0.35rem; display:block;">
+            <i class="fa-solid fa-lightbulb"></i> Puedes escribir un nuevo grupo o seleccionar uno registrado del catálogo.
+          </small>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="groupModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Guardar Grupo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: NUEVO / EDITAR BLOQUE HORARIO -->
+  <div class="modal-overlay" id="slotModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="slotModalTitle"><i class="fa-solid fa-clock"></i> Gestionar Bloque Horario (Hora)</h3>
+        <button class="close-modal-btn" data-close="slotModal">&times;</button>
+      </div>
+      <form id="slotForm">
+        <input type="hidden" id="oldSlotInput">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="slotStartTimeInput"><i class="fa-solid fa-clock"></i> Hora de Inicio</label>
+            <input type="time" id="slotStartTimeInput" class="form-control" value="07:00" required>
+          </div>
+          <div class="form-group">
+            <label for="slotEndTimeInput"><i class="fa-solid fa-clock"></i> Hora de Fin</label>
+            <input type="time" id="slotEndTimeInput" class="form-control" value="08:30" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="slotNameInput"><i class="fa-solid fa-business-time"></i> Franja Horaria / Nombre de Bloque</label>
+          <input type="text" id="slotNameInput" class="form-control" placeholder="Ej. 07:00 - 08:30" required>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="slotModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Guardar Horario</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: INICIO DE SESIÓN Y GESTIÓN INSTITUCIONAL (ADMIN) -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-card" style="max-width: 680px; width: 95%;">
+      <div class="modal-header auth-modal-header"
+        style="display:flex; justify-content:space-between; align-items:center; position:relative; padding:1.25rem 1.5rem; border-bottom: 1px solid var(--border-color, #e2e8f0);">
+        <h3 style="margin:0; font-size:1.15rem; display:flex; align-items:center; gap:0.5rem; color:var(--text-main, #0f172a);">
+          <i class="fa-solid fa-graduation-cap" style="color:var(--primary, #3b82f6);"></i> Acceso al Portal Institucional
+        </h3>
+        <button class="close-modal-btn" data-close="authModal" style="position:static;">&times;</button>
+      </div>
+
+      <!-- BARRA DE PESTAÑAS (PESTAÑA ADMIN VISIBLE EXCLUSIVAMENTE A ADMINISTRADORES) -->
+      <div class="auth-tabs-nav" style="display:flex; border-bottom:1px solid var(--border-color, #e2e8f0); background:#f8fafc; padding:0 0.75rem;">
+        <button type="button" id="tabAuthLogin" class="auth-nav-tab active" style="flex:1; padding:0.85rem 1rem; border:none; background:none; font-weight:700; font-size:0.88rem; color:#2563eb; border-bottom:3px solid #2563eb; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.5rem; transition:all 0.2s;">
+          <i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión
+        </button>
+        <button type="button" id="tabAuthAdmin" class="auth-nav-tab" style="display:none; flex:1; padding:0.85rem 1rem; border:none; background:none; font-weight:700; font-size:0.88rem; color:#64748b; border-bottom:3px solid transparent; cursor:pointer; align-items:center; justify-content:center; gap:0.5rem; transition:all 0.2s;">
+          <i class="fa-solid fa-user-shield" style="color:#d97706;"></i> Gestión Admin (Añadir Estudiante y Roles)
+        </button>
+      </div>
+
+      <!-- VISTA 1: FORMULARIO INICIO DE SESIÓN (ACCESIBLE PARA TODOS, ESTUDIANTES ÚNICAMENTE ESTA VISTA) -->
+      <div id="loginView" class="auth-view active" style="padding:1.25rem 1.5rem;">
+
+        <!-- BLOQUE A: FORMULARIO PRINCIPAL DE LOGIN -->
+        <div id="loginMainBox">
+          <!-- AVISO INSTITUCIONAL DE ACCESO ESTUDIANTIL -->
+          <div class="institutional-student-banner" style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:0.85rem 1rem; margin-bottom:1.25rem; display:flex; align-items:flex-start; gap:0.85rem;">
+            <i class="fa-solid fa-school-flag" style="color:#2563eb; font-size:1.35rem; margin-top:2px;"></i>
+            <div style="font-size:0.82rem; color:#1e40af; line-height:1.45;">
+              <strong style="color:#1e3a8a; font-size:0.88rem;">I.E. Luis Carlos Galán Sarmiento</strong><br>
+              Los estudiantes deben ingresar exclusivamente con su correo institucional: <code style="background:#dbeafe; padding:1px 5px; border-radius:4px; font-weight:700; color:#1e40af;">@ieluiscarlosgalansarmiento.edu.co</code>.<br>
+              <span style="font-size:0.77rem; color:#3b82f6;">El registro y los roles son gestionados únicamente por el Administrador.</span>
+            </div>
+          </div>
+
+          <form id="loginForm">
+            <div class="form-group">
+              <label for="loginEmailInput"><i class="fa-solid fa-envelope"></i> Correo Electrónico Institucional</label>
+              <input type="email" id="loginEmailInput" class="form-control" placeholder="nombre_estudiante@ieluiscarlosgalansarmiento.edu.co" required>
+            </div>
+
+            <div class="form-group">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+                <label for="loginPasswordInput" style="margin-bottom:0;"><i class="fa-solid fa-key"></i> Contraseña</label>
+                <button type="button" id="btnForgotPass" style="background:none; border:none; color:var(--primary, #3b82f6); cursor:pointer; font-size:0.83rem; font-weight:600; padding:0; text-decoration:underline;">
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
+              <input type="password" id="loginPasswordInput" class="form-control" placeholder="••••••••" required>
+            </div>
+
+            <div class="modal-footer" style="margin-top:1.25rem;">
+              <button type="button" class="btn btn-secondary" data-close="authModal">Cancelar</button>
+              <button type="submit" class="btn btn-primary"><i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión</button>
+            </div>
+          </form>
+
+          <!-- ACCESOS RÁPIDOS DE PRUEBA / DEMO -->
+          <div style="margin-top:1.25rem; padding-top:1rem; border-top:1px dashed #e2e8f0;">
+            <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; color:#64748b; font-weight:700; margin-bottom:0.5rem; text-align:center;">
+              Accesos Rápidos de Prueba Institucional
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:center;">
+              <button type="button" class="btn-demo-user" data-email="calendariolcgs@gmail.com" data-pass="11042008eC" style="font-size:0.75rem; padding:4px 8px; border:1px solid #bfdbfe; border-radius:6px; background:#eff6ff; color:#1e40af; cursor:pointer;">
+                👑 Admin Oficial (calendariolcgs@gmail.com)
+              </button>
+              <button type="button" class="btn-demo-user" data-email="mariagonzalezr@ieluiscarlosgalansarmiento.edu.co" data-pass="11042008ec" style="font-size:0.75rem; padding:4px 8px; border:1px solid #e2e8f0; border-radius:6px; background:#f8fafc; color:#334155; cursor:pointer;">
+                👑 Admin Institucional (María González)
+              </button>
+              <button type="button" class="btn-demo-user" data-email="estudiante@ieluiscarlosgalansarmiento.edu.co" data-pass="123456" style="font-size:0.75rem; padding:4px 8px; border:1px solid #bbf7d0; border-radius:6px; background:#f0fdf4; color:#166534; cursor:pointer;">
+                🎓 Estudiante Galanista
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- BLOQUE B: RECUPERACIÓN DE CONTRASEÑA (DENTRO DE INICIO DE SESIÓN) -->
+        <div id="loginRecoveryBox" style="display: none;">
+          <div class="auth-welcome" style="margin-bottom:1.25rem;">
+            <h3 style="margin:0 0 0.35rem; font-size:1.1rem; color:#1e293b; display:flex; align-items:center; gap:0.5rem;">
+              <i class="fa-solid fa-shield-halved" style="color:var(--primary, #3b82f6);"></i> Recuperar Contraseña Institucional
+            </h3>
+            <p style="margin:0; font-size:0.83rem; color:#64748b;">
+              Ingresa tu correo institucional registrado para enviarte un código de seguridad seguro de 6 dígitos vía Gmail oficial.
+            </p>
+          </div>
+
+          <!-- PASO 1: ENVIAR CÓDIGO -->
+          <form id="formRequestResetCode" style="margin-bottom: 1.25rem;">
+            <div class="form-group">
+              <label for="forgotEmailInput"><i class="fa-solid fa-envelope"></i> Correo Electrónico Registrado</label>
+              <div style="display:flex; gap:0.5rem;">
+                <input type="email" id="forgotEmailInput" class="form-control" placeholder="estudiante@ieluiscarlosgalansarmiento.edu.co" required>
+                <button type="submit" id="btnSendResetCode" class="btn btn-outline" style="white-space:nowrap; border-color:#2563eb; color:#2563eb;">
+                  <i class="fa-solid fa-paper-plane"></i> Enviar Código
+                </button>
+              </div>
+              <small style="color:var(--text-muted, #64748b); font-size:0.8rem; margin-top:0.35rem; display:block;">
+                Despacharemos un código de 6 dígitos a tu bandeja de entrada o spam con validez de 15 minutos.
+              </small>
+            </div>
+          </form>
+
+          <!-- NOTIFICACIÓN DE ENVÍO POR CORREO -->
+          <div id="emailSentNotification" style="display:none; margin-bottom: 1.25rem; padding: 0.9rem 1.1rem; border-radius: 8px; background: #f0fdf4; border: 1px solid #bbf7d0;">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <i class="fa-solid fa-envelope-circle-check" style="color:#16a34a; font-size:1.4rem;"></i>
+              <div>
+                <strong style="font-size:0.85rem; color:#166534; display:block;">¡Código enviado con éxito!</strong>
+                <span id="emailSentMsg" style="font-size:0.8rem; color:#15803d; line-height:1.4; display:block;">
+                  Revisa tu bandeja de entrada o spam. Ingresa el código de 6 dígitos para establecer tu nueva clave.
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASO 2: INTRODUCIR CÓDIGO Y NUEVA CONTRASEÑA -->
+          <form id="formConfirmResetPassword">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="resetCodeInput"><i class="fa-solid fa-shield"></i> Código (6 dígitos) *</label>
+                <input type="text" id="resetCodeInput" class="form-control" placeholder="Ej. 748291" maxlength="6" pattern="[0-9]{6}" required>
+              </div>
+              <div class="form-group">
+                <label for="newPasswordInput"><i class="fa-solid fa-lock"></i> Nueva Contraseña *</label>
+                <input type="password" id="newPasswordInput" class="form-control" placeholder="••••••••" minlength="4" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="confirmNewPasswordInput"><i class="fa-solid fa-lock-open"></i> Confirmar Nueva Contraseña *</label>
+              <input type="password" id="confirmNewPasswordInput" class="form-control" placeholder="Repite la contraseña" minlength="4" required>
+            </div>
+
+            <div class="modal-footer" style="justify-content:space-between; margin-top:1.25rem;">
+              <button type="button" id="btnBackToLoginFromForgot" class="btn btn-secondary">
+                <i class="fa-solid fa-arrow-left"></i> Volver a Iniciar Sesión
+              </button>
+              <button type="submit" id="btnSaveNewPassword" class="btn btn-primary">
+                <i class="fa-solid fa-check"></i> Restablecer Contraseña
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- VISTA 2: GESTIÓN DE ESTUDIANTES Y ROLES (UNICAMENTE VISIBLE Y ACCESIBLE A ADMINISTRADORES) -->
+      <div id="adminMgmtView" class="auth-view" style="display:none; padding:1.25rem 1.5rem; max-height:75vh; overflow-y:auto;">
+        
+        <!-- AVISO DE PRIVILEGIO ADMINISTRATIVO -->
+        <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:0.85rem 1rem; margin-bottom:1.25rem; display:flex; align-items:flex-start; gap:0.85rem;">
+          <i class="fa-solid fa-user-shield" style="color:#d97706; font-size:1.35rem; margin-top:2px;"></i>
+          <div style="font-size:0.82rem; color:#92400e; line-height:1.45;">
+            <strong style="color:#78350f; font-size:0.88rem;">Panel Exclusivo de Administradores</strong><br>
+            Como Administrador institucional, tienes la autorización exclusiva para dar de alta nuevos estudiantes y docentes con todas las opciones de registro, o cambiar el rol de cualquier usuario en el sistema.
+          </div>
+        </div>
+
+        <!-- SECCIÓN 1: AÑADIR ESTUDIANTE / USUARIO (REGISTRO COMPLETO) -->
+        <div class="admin-card-section" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:1.25rem; margin-bottom:1.5rem; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:0.5rem;">
+            <i class="fa-solid fa-user-plus" style="color:#2563eb; font-size:1.1rem;"></i>
+            <h4 style="margin:0; font-size:0.95rem; color:#1e293b;">Añadir Nuevo Estudiante o Usuario (Registro Completo)</h4>
+          </div>
+
+          <form id="adminRegisterForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="adminRegName"><i class="fa-solid fa-id-card"></i> Nombre Completo *</label>
+                <input type="text" id="adminRegName" class="form-control" placeholder="Ej. Juan David Restrepo" required>
+              </div>
+              <div class="form-group">
+                <label for="adminRegEmail"><i class="fa-solid fa-envelope"></i> Correo Electrónico Institucional *</label>
+                <input type="email" id="adminRegEmail" class="form-control" placeholder="estudiante@ieluiscarlosgalansarmiento.edu.co" required>
+                <small style="font-size:0.75rem; color:#64748b; margin-top:3px; display:block;">Para estudiantes: @ieluiscarlosgalansarmiento.edu.co</small>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="adminRegRole"><i class="fa-solid fa-user-tag"></i> Rol Institucional Asignado *</label>
+                <select id="adminRegRole" class="form-control" required>
+                  <option value="viewer" selected>🎓 Estudiante (Solo Lectura / Consulta)</option>
+                  <option value="editor">👨‍🏫 Docente / Editor (Gestión de Horarios)</option>
+                  <option value="admin">👑 Administrador (Control Total)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="adminRegPassword"><i class="fa-solid fa-lock"></i> Contraseña Inicial *</label>
+                <div style="position:relative; display:flex; align-items:center;">
+                  <input type="password" id="adminRegPassword" class="form-control" placeholder="Mínimo 4 caracteres" minlength="4" required style="padding-right:2.4rem; width:100%; word-break:break-all;">
+                  <button type="button" id="btnToggleAdminRegPassword" style="position:absolute; right:8px; background:none; border:none; color:#64748b; cursor:pointer; padding:4px 6px; font-size:0.9rem;" title="Mostrar / ocultar contraseña">
+                    <i class="fa-solid fa-eye" id="iconEyeAdminReg"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="adminRegAvatar"><i class="fa-solid fa-face-smile"></i> Avatar / Ícono de Perfil</label>
+                <select id="adminRegAvatar" class="form-control">
+                  <option value="🎓">🎓 Estudiante</option>
+                  <option value="👨‍🏫">👨‍🏫 Profesor / Docente</option>
+                  <option value="👩‍🏫">👩‍🏫 Coordinador</option>
+                  <option value="🧑‍🎓">🧑‍🎓 Alumno / Joven</option>
+                  <option value="🏛️">🏛️ Directivo Institucional</option>
+                  <option value="🧑‍💻">🧑‍💻 Sistemas / Tecnología</option>
+                  <option value="👤">👤 Usuario Estándar</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="adminRegColor"><i class="fa-solid fa-palette"></i> Color Identificador</label>
+                <div style="display:flex; align-items:center; gap:0.5rem; margin-top:2px;">
+                  <input type="color" id="adminRegColor" value="#3b82f6" style="height:38px; width:50px; padding:2px; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer;">
+                  <span id="adminRegColorVal" style="font-size:0.8rem; color:#64748b; font-family:monospace;">#3b82f6</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:0.75rem; display:flex; justify-content:flex-end;">
+              <button type="submit" id="btnAdminSubmitRegister" class="btn btn-primary" style="padding:0.6rem 1.25rem;">
+                <i class="fa-solid fa-user-plus"></i> Registrar Estudiante / Usuario
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- SECCIÓN 2: MODIFICAR ROL DE USUARIO / ESTUDIANTE -->
+        <div class="admin-card-section" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:1.25rem; margin-bottom:1.5rem; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:0.5rem;">
+            <i class="fa-solid fa-arrows-rotate" style="color:#d97706; font-size:1.1rem;"></i>
+            <h4 style="margin:0; font-size:0.95rem; color:#1e293b;">Modificar Rol de Usuario o Estudiante</h4>
+          </div>
+
+          <form id="adminModifyRoleForm">
+            <div class="form-row">
+              <div class="form-group" style="min-width:0;">
+                <label for="adminModUserSelect"><i class="fa-solid fa-user"></i> Seleccionar Usuario / Estudiante *</label>
+                <select id="adminModUserSelect" class="form-control" style="width:100%; text-overflow:ellipsis; overflow:hidden;" required>
+                  <option value="">-- Seleccionar usuario --</option>
+                </select>
+              </div>
+              <div class="form-group" style="min-width:0;">
+                <label for="adminModRoleSelect"><i class="fa-solid fa-user-shield"></i> Nuevo Rol Asignado *</label>
+                <select id="adminModRoleSelect" class="form-control" style="width:100%;" required>
+                  <option value="viewer">🎓 Estudiante (Solo Consulta)</option>
+                  <option value="editor">👨‍🏫 Docente / Editor Institucional</option>
+                  <option value="admin">👑 Administrador</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- DETALLE RÁPIDO DEL USUARIO SELECCIONADO (SIN TRUNCAR TEXTO) -->
+            <div id="adminModUserInfo" style="display:none; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:0.85rem 1rem; margin-bottom:1.15rem; font-size:0.85rem; word-break:break-word; overflow-wrap:anywhere;">
+              <span id="adminModUserDesc" style="color:#334155;"></span>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end;">
+              <button type="submit" id="btnAdminSubmitModifyRole" class="btn btn-warning" style="background:#d97706; color:white; border:none; padding:0.6rem 1.25rem; cursor:pointer;">
+                <i class="fa-solid fa-check"></i> Actualizar Rol
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- SECCIÓN 3: DIRECTORIO DE USUARIOS REGISTRADOS -->
+        <div class="admin-card-section" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:1.25rem; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; border-bottom:1px solid #f1f5f9; padding-bottom:0.5rem;">
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+              <i class="fa-solid fa-users" style="color:#059669; font-size:1.1rem;"></i>
+              <h4 style="margin:0; font-size:0.95rem; color:#1e293b;">Directorio Institucional de Usuarios y Estudiantes</h4>
+            </div>
+            <span id="adminUsersCountBadge" style="background:#f1f5f9; color:#475569; font-size:0.78rem; font-weight:700; padding:2px 8px; border-radius:12px;">0 usuarios</span>
+          </div>
+
+          <div id="adminUsersListContainer" style="max-height:300px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; background:#ffffff;">
+            <!-- Renderizado dinámico de usuarios con badges y acciones -->
+          </div>
+        </div>
+
+        <div class="modal-footer" style="margin-top:1.25rem;">
+          <button type="button" class="btn btn-secondary" data-close="authModal">Cerrar</button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- HTML5 Dynamic Datalists for instant autocomplete in schedule cells and modals -->
+  <datalist id="materiasDatalist"></datalist>
+  <datalist id="docentesDatalist"></datalist>
+  <datalist id="aulasDatalist"></datalist>
+  <datalist id="gruposDatalist"></datalist>
+
+  <!-- TOAST NOTIFICATIONS CONTAINER -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- JavaScript Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+
+</html>
