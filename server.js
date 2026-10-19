@@ -56,7 +56,7 @@ const startServer = async () => {
   } catch (err) {
     console.error('⚠️ Advertencia en la conexión DB:', err.message);
   }
-  
+
   console.log('🌱 Inicializando datos del sistema...');
   try {
     await seedData();
@@ -74,7 +74,9 @@ const startServer = async () => {
 
 startServer().catch(err => {
   console.error('❌ Error al iniciar el servidor:', err);
+
 });
 
+module.exports = app;
 
 
