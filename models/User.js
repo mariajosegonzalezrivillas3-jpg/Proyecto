@@ -11,9 +11,9 @@ const UserSchema = new mongoose.Schema({
   resetCodeExpires: { type: Date, default: null },
   hiddenCalendars: { type: [String], default: [] },
   hiddenFolders: { type: [String], default: [] }
-}, { 
-  collection: 'usuarios',
-  timestamps: true 
+}, {
+  collection: 'users',
+  timestamps: true
 });
 
 module.exports = mongoose.model('User', UserSchema);

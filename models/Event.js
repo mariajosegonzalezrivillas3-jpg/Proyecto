@@ -16,14 +16,14 @@ const EventSchema = new mongoose.Schema({
   color: { type: String, default: '#3b82f6' },
   description: { type: String, default: '' },
   category: { type: String, default: 'General' }
-}, { 
-  collection: 'eventos',
+}, {
+  collection: 'events',
   timestamps: true,
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
 
-EventSchema.pre('save', function(next) {
+EventSchema.pre('save', function (next) {
   if (this.titulo) this.title = this.titulo;
   else if (this.title) this.titulo = this.title;
 
